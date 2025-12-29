@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Contact Management</title>
+
+    <style>
+        body {
+            font-family: Arial;
+            background: #f2f2f2;
+        }
+        .container {
+            width: 500px;
+            margin: auto;
+            background: white;
+            padding: 20px;
+            margin-top: 40px;
+            border-radius: 8px;
+        }
+        h2 {
+            text-align: center;
+        }
+        input {
+            width: 95%;
+            padding: 8px;
+            margin: 6px 0;
+        }
+        button {
+            padding: 8px 15px;
+            background: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        table {
+            width: 100%;
+            margin-top: 15px;
+            border-collapse: collapse;
+        }
+        th, td {
+            border: 1px solid #ccc;
+            padding: 6px;
+            text-align: center;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+    <h2>Contact Management</h2>
+
+    <input type="hidden" id="id">
+
+    <input type="text" id="name" placeholder="Contact Name">
+    <input type="text" id="phone" placeholder="Phone Number">
+
+    <button onclick="saveContact()">Save Contact</button>
+
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Phone</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody id="contactTable"></tbody>
+    </table>
+</div>
+
+<script>
+    const api = "http://localhost:8085/contacts";
+
+    function loadContacts() {
+        fetch(api)
+            .then(res => res.json())
+            .then(data => {
+                let rows = "";
+                data.forEach(c => {
+                    rows += `
+                    <tr>
+                        <td>${c.id}</td>
+                        <td>${c.name}</td>
+                        <td>${c.phone}</td>
+                        <td>
+                            <button onclick="edit(${c.id}, '${c.name}', '${c.phone}')">Edit</button>
+                            <button onclick="del(${c.id})">Delete</button>
+                        </td>
+                    </tr>`;
+                });
+                document.getElementById("contactTable").innerHTML = rows;
+            });
+    }
+
+    function saveContact() {
+        let id = document.getElementById("id").value;
+
+        let contact = {
+            name: document.getElementById("name").value,
+            phone: document.getElementById("phone").value
+        };
+
+        let method = id ? "PUT" : "POST";
+        let url = id ? api + "/" + id : api;
+
+        fetch(url, {
+            method: method,
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(contact)
+        }).then(() => {
+            clearForm();
+            loadContacts();
+        });
+    }
+
+    function edit(id, name, phone) {
+        document.getElementById("id").value = id;
+        document.getElementById("name").value = name;
+        document.getElementById("phone").value = phone;
+    }
+
+    function del(id) {
+        fetch(api + "/" + id, { method: "DELETE" })
+            .then(() => loadContacts());
+    }
+
+    function clearForm() {
+        document.getElementById("id").value = "";
+        document.getElementById("name").value = "";
+        document.getElementById("phone").value = "";
+    }
+
+    loadContacts();
+</script>
+
+</body>
+</html>
